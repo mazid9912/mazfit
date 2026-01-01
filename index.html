@@ -20,20 +20,23 @@
 </head>
 <body class="pb-32">
 
-    <div class="p-6 pt-12">
-        <h1 class="text-3xl font-extrabold tracking-tight">Aujourd'hui</h1>
-        <p id="resume-cal" class="text-gray-500 font-medium mt-1">Chargement des données...</p>
+    <div class="p-6 pt-12 pb-2">
+        <h1 id="date-titre" class="text-3xl font-extrabold tracking-tight capitalize">Aujourd'hui</h1>
+        <div id="resume-container" class="mt-3 p-4 bg-white rounded-3xl shadow-sm border border-gray-100">
+            <p id="resume-cal" class="text-gray-500 font-medium text-sm text-center">Calcul des données...</p>
+        </div>
     </div>
 
-    <div class="px-6 space-y-4" id="timeline">
-        </div>
+    <div id="date-selector" class="flex space-x-4 px-6 overflow-x-auto no-scrollbar mb-6 pb-2"></div>
+
+    <div class="px-6 space-y-4" id="timeline"></div>
 
     <button onclick="ouvrirModal()" class="fixed bottom-28 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl text-3xl flex items-center justify-center active:scale-90 transition-transform z-50">
         +
     </button>
 
     <div id="modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-[60] flex items-end">
-        <div class="bg-white w-full rounded-t-[3rem] p-8 animate-slide-up">
+        <div class="bg-white w-full rounded-t-[3rem] p-8 animate-slide-up shadow-2xl">
             <h2 class="text-2xl font-bold mb-6">Nouvelle activité</h2>
             <div class="space-y-4">
                 <input type="text" id="titreAct" placeholder="Nom (ex: Muscu, Pâtes...)" class="w-full p-4 bg-gray-100 rounded-2xl outline-none">
@@ -42,8 +45,11 @@
                     <option value="sport">💪 Sport (Muscu/Cardio)</option>
                     <option value="repas">🍽️ Repas / Snack</option>
                 </select>
-                <input type="time" id="heureAct" class="w-full p-4 bg-gray-100 rounded-2xl outline-none">
-                <button onclick="ajouterElement()" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg shadow-lg">Ajouter au calendrier</button>
+                <div class="flex space-x-2">
+                    <input type="time" id="heureAct" class="flex-1 p-4 bg-gray-100 rounded-2xl outline-none">
+                    <input type="number" id="calAct" placeholder="kcal" class="w-24 p-4 bg-gray-100 rounded-2xl outline-none">
+                </div>
+                <button onclick="ajouterElement()" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg shadow-lg">Ajouter</button>
                 <button onclick="fermerModal()" class="w-full text-gray-400 font-medium p-2">Annuler</button>
             </div>
         </div>
@@ -58,62 +64,94 @@
     <input type="file" accept="image/*" capture="environment" id="photoInput" class="hidden">
 
     <script>
+        // DONNÉES DE BASE (126.8kg / 2136kcal)
         const donneesPhysiques = {
             poidsActuel: 126.8,
             metabolismeBase: 2136,
-            objectifCalories: 2250
+            objectifCalories: 2250 
         };
 
-        // Charger les données sauvegardées ou utiliser une liste par défaut
-        let maJournee = JSON.parse(localStorage.getItem('monPlan')) || [
-            { id: 1, type: 'repas', titre: 'Petit Déjeuner', heure: '08:00', icone: '🥣', calories: 0 },
-            { id: 2, type: 'sport', titre: 'Séance Muscu', heure: '18:00', icone: '💪', calories: 400 }
-        ];
+        let dateSelectionnee = new Date().toISOString().split('T')[0];
+        let toutesLesActivites = JSON.parse(localStorage.getItem('monPlan')) || [];
 
-        function mettreAJourResume() {
-            const totalMange = maJournee.filter(i => i.type === 'repas').reduce((sum, i) => sum + (i.calories || 0), 0);
-            const totalBrule = maJournee.filter(i => i.type === 'sport').reduce((sum, i) => sum + (i.calories || 0), 0);
+        function genererCalendrier() {
+            const selector = document.getElementById('date-selector');
+            selector.innerHTML = '';
+            const aujourdhui = new Date();
+
+            for (let i = -2; i < 14; i++) {
+                const d = new Date();
+                d.setDate(aujourdhui.getDate() + i);
+                const isoDate = d.toISOString().split('T')[0];
+                const estSelectionne = isoDate === dateSelectionnee;
+                const jourNom = d.toLocaleDateString('fr-FR', { weekday: 'short' });
+                const jourNum = d.getDate();
+
+                selector.innerHTML += `
+                    <div onclick="changerDate('${isoDate}')" 
+                         class="flex-shrink-0 w-14 h-20 rounded-2xl flex flex-col items-center justify-center transition-all shadow-sm
+                         ${estSelectionne ? 'bg-blue-600 text-white scale-110 shadow-lg' : 'bg-white text-gray-400 border border-gray-100'}">
+                        <span class="text-[10px] uppercase font-bold">${jourNom}</span>
+                        <span class="text-xl font-bold">${jourNum}</span>
+                    </div>`;
+            }
+        }
+
+        function changerDate(nouvelleDate) {
+            dateSelectionnee = nouvelleDate;
+            const d = new Date(nouvelleDate);
+            document.getElementById('date-titre').innerText = (nouvelleDate === new Date().toISOString().split('T')[0]) ? "Aujourd'hui" : d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+            genererCalendrier();
+            chargerTimeline();
+        }
+
+        function mettreAJourResume(activitesDuJour) {
+            const totalMange = activitesDuJour.filter(i => i.type === 'repas').reduce((sum, i) => sum + (parseInt(i.calories) || 0), 0);
+            const totalBrule = activitesDuJour.filter(i => i.type === 'sport').reduce((sum, i) => sum + (parseInt(i.calories) || 0), 0);
             const reste = donneesPhysiques.objectifCalories - totalMange + totalBrule;
             
             document.getElementById('resume-cal').innerHTML = `
-                Mangé: <span class="text-orange-500 font-bold">${totalMange}</span> | 
-                Brûlé: <span class="text-green-500 font-bold">${totalBrule}</span><br>
-                Reste: <span class="text-blue-600 font-bold text-xl">${Math.round(reste)} kcal</span>
-            `;
+                <div class="flex justify-around items-center">
+                    <div class="text-center"><p class="text-[10px] uppercase text-gray-400">Mangé</p><p class="text-orange-500 font-bold">${totalMange}</p></div>
+                    <div class="text-center h-8 w-[1px] bg-gray-100"></div>
+                    <div class="text-center"><p class="text-blue-600 font-extrabold text-xl">${Math.round(reste)}</p><p class="text-[10px] uppercase text-gray-400">Reste kcal</p></div>
+                    <div class="text-center h-8 w-[1px] bg-gray-100"></div>
+                    <div class="text-center"><p class="text-[10px] uppercase text-gray-400">Brûlé</p><p class="text-green-500 font-bold">${totalBrule}</p></div>
+                </div>`;
         }
 
         function chargerTimeline() {
             const timeline = document.getElementById('timeline');
             timeline.innerHTML = '';
-            
-            // Tri par heure
-            maJournee.sort((a, b) => a.heure.localeCompare(b.heure));
+            const activitesDuJour = toutesLesActivites.filter(item => item.date === dateSelectionnee);
+            activitesDuJour.sort((a, b) => a.heure.localeCompare(b.heure));
 
-            maJournee.forEach(item => {
+            if (activitesDuJour.length === 0) {
+                timeline.innerHTML = `<div class="text-center py-10"><p class="text-gray-300">Aucune activité prévue.</p></div>`;
+            }
+
+            activitesDuJour.forEach(item => {
                 const card = document.createElement('div');
                 card.className = "ios-blur rounded-3xl p-5 shadow-sm border border-white/50 mb-4";
-                
-                let colorClass = item.type === 'sport' ? 'border-green-500' : (item.type === 'repas' ? 'border-orange-500' : 'border-blue-500');
+                let color = item.type === 'sport' ? 'border-green-500' : (item.type === 'repas' ? 'border-orange-500' : 'border-blue-500');
 
                 card.innerHTML = `
-                    <div class="flex justify-between items-center border-l-4 ${colorClass} pl-4">
+                    <div class="flex justify-between items-center border-l-4 ${color} pl-4">
                         <div>
-                            <span class="text-[10px] font-bold uppercase text-gray-400">${item.heure}</span>
-                            <h3 class="font-bold text-gray-800 text-lg">${item.icone} ${item.titre}</h3>
-                            ${item.type !== 'cours' ? `<p class="text-sm font-medium text-gray-500">${item.calories || 0} kcal</p>` : ''}
+                            <span class="text-[10px] font-bold text-gray-400">${item.heure}</span>
+                            <h3 class="font-bold text-gray-800">${item.icone} ${item.titre}</h3>
+                            ${item.type !== 'cours' ? `<p class="text-xs font-bold text-gray-400">${item.calories || 0} kcal</p>` : ''}
                         </div>
-                        ${item.type === 'repas' ? `
-                            <button onclick="ouvrirAppareilPhoto(${item.id})" class="bg-orange-100 p-3 rounded-2xl active:scale-95 transition-transform">📸</button>
-                        ` : ''}
-                        <button onclick="supprimerItem(${item.id})" class="text-gray-300 hover:text-red-400 ml-2">✕</button>
+                        <div class="flex items-center space-x-2">
+                            ${item.type === 'repas' ? `<button onclick="ouvrirAppareilPhoto(${item.id})" class="bg-orange-50 p-3 rounded-2xl">📸</button>` : ''}
+                            <button onclick="supprimerItem(${item.id})" class="text-gray-200 p-2">✕</button>
+                        </div>
                     </div>
-                    <div id="preview-${item.id}" class="mt-4 w-full h-40 bg-gray-100 rounded-2xl ${item.photo ? '' : 'hidden'} overflow-hidden">
-                        <img src="${item.photo || ''}" class="w-full h-full object-cover">
-                    </div>
+                    ${item.photo ? `<div class="mt-4 w-full h-44 rounded-2xl overflow-hidden shadow-inner"><img src="${item.photo}" class="w-full h-full object-cover"></div>` : ''}
                 `;
                 timeline.appendChild(card);
             });
-            mettreAJourResume();
+            mettreAJourResume(activitesDuJour);
         }
 
         function ouvrirModal() { document.getElementById('modal').classList.remove('hidden'); }
@@ -123,26 +161,27 @@
             const titre = document.getElementById('titreAct').value;
             const type = document.getElementById('typeAct').value;
             const heure = document.getElementById('heureAct').value;
+            const cal = document.getElementById('calAct').value || (type === 'sport' ? 400 : 0);
 
             if(titre && heure) {
-                const nouvelItem = {
+                toutesLesActivites.push({
                     id: Date.now(),
+                    date: dateSelectionnee,
                     type: type,
                     titre: titre,
                     heure: heure,
                     icone: type === 'sport' ? '💪' : (type === 'repas' ? '🍽️' : '📚'),
-                    calories: type === 'sport' ? 400 : 0
-                };
-                maJournee.push(nouvelItem);
-                sauvegarderEtRelancer();
+                    calories: cal
+                });
+                sauvegarder();
                 fermerModal();
                 document.getElementById('titreAct').value = '';
             }
         }
 
         function supprimerItem(id) {
-            maJournee = maJournee.filter(i => i.id !== id);
-            sauvegarderEtRelancer();
+            toutesLesActivites = toutesLesActivites.filter(i => i.id !== id);
+            sauvegarder();
         }
 
         function ouvrirAppareilPhoto(id) {
@@ -151,11 +190,11 @@
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function(event) {
-                        const item = maJournee.find(i => i.id === id);
+                    reader.onload = (event) => {
+                        const item = toutesLesActivites.find(i => i.id === id);
                         item.photo = event.target.result;
-                        item.calories = 450; // Simulation estimation IA
-                        sauvegarderEtRelancer();
+                        item.calories = item.calories || 450; 
+                        sauvegarder();
                     };
                     reader.readAsDataURL(file);
                 }
@@ -163,11 +202,12 @@
             input.click();
         }
 
-        function sauvegarderEtRelancer() {
-            localStorage.setItem('monPlan', JSON.stringify(maJournee));
+        function sauvegarder() {
+            localStorage.setItem('monPlan', JSON.stringify(toutesLesActivites));
             chargerTimeline();
         }
 
+        genererCalendrier();
         chargerTimeline();
     </script>
 </body>
