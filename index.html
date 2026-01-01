@@ -56,46 +56,44 @@
     </nav>
 
     <script>
-// 1. Nos données (on simulera une base de données ici)
-let maJournee = [
-    { id: 1, type: 'cours', titre: 'Mathématiques', heure: '09:00', icone: '📚', couleur: 'blue' },
-    { id: 2, type: 'repas', titre: 'Petit-Déjeuner', heure: '08:00', icone: '🥣', calories: 450 },
-    { id: 3, type: 'sport', titre: 'Séance Poussée (Pectoraux)', heure: '18:00', icone: '💪', calories: 500 }
+// 1. Tes données physiques réelles (issues de ta balance)
+const donneesPhysiques = {
+    poidsActuel: 126.8,
+    metabolismeBase: 2136,
+    objectifCalories: 2250, // Déficit léger pour perdre gras sans perdre muscle
+    proteinesCible: 190 // Environ 1.5g par kilo de poids
+};
+
+// 2. Ta base de données locale (chargée depuis le téléphone ou vide)
+let maJournee = JSON.parse(localStorage.getItem('monPlan')) || [
+    { id: 1, type: 'repas', titre: 'Petit-Déjeuner', heure: '08:00', icone: '🥣', calories: 500 },
+    { id: 2, type: 'cours', titre: 'Cours du matin', heure: '09:00', icone: '📚' }
 ];
 
-// 2. Fonction pour afficher les éléments dans la timeline
+// 3. Fonction pour mettre à jour l'affichage des calories en haut
+function mettreAJourResume() {
+    const totalMange = maJournee
+        .filter(i => i.type === 'repas')
+        .reduce((sum, i) => sum + (i.calories || 0), 0);
+    
+    const totalBrule = maJournee
+        .filter(i => i.type === 'sport')
+        .reduce((sum, i) => sum + (i.calories || 0), 0);
+
+    const reste = donneesPhysiques.objectifCalories - totalMange + totalBrule;
+    
+    // On met à jour le texte dans le Header (si tu as mis les bons ID)
+    document.querySelector('p.text-gray-500').innerHTML = `
+        Mangé: <span class="text-orange-500 font-bold">${totalMange}</span> | 
+        Brûlé: <span class="text-green-500 font-bold">${totalBrule}</span><br>
+        Reste: <span class="text-blue-600 font-bold text-xl">${Math.round(reste)} kcal</span>
+    `;
+}
+
+// Appelle cette fonction à la fin de chargerTimeline()
 function chargerTimeline() {
-    const timeline = document.getElementById('timeline');
-    timeline.innerHTML = ''; // On vide pour rafraîchir
-
-    maJournee.forEach(item => {
-        const card = document.createElement('div');
-        card.className = "ios-blur rounded-3xl p-5 shadow-sm border border-white/50 mb-4";
-        
-        // Couleur dynamique selon le type
-        let borderCol = item.type === 'sport' ? 'border-l-4 border-green-500' : 
-                        item.type === 'repas' ? 'border-l-4 border-orange-500' : 
-                        'border-l-4 border-blue-500';
-
-        card.innerHTML = `
-            <div class="flex justify-between items-center ${borderCol} pl-4">
-                <div>
-                    <span class="text-xs font-bold uppercase text-gray-400">${item.heure}</span>
-                    <h3 class="font-bold text-gray-800 text-lg">${item.icone} ${item.titre}</h3>
-                    ${item.calories ? `<p class="text-sm font-medium text-gray-500">${item.calories} kcal</p>` : ''}
-                </div>
-                ${item.type === 'repas' ? `
-                    <button onclick="ouvrirAppareilPhoto(${item.id})" class="bg-orange-100 p-3 rounded-2xl active:scale-90 transition-transform">
-                        📸
-                    </button>
-                ` : ''}
-            </div>
-            <div id="preview-${item.id}" class="mt-4 w-full h-40 bg-gray-100 rounded-2xl hidden overflow-hidden">
-                <img id="img-${item.id}" src="" class="w-full h-full object-cover">
-            </div>
-        `;
-        timeline.appendChild(card);
-    });
+    // ... (garde ton code précédent ici) ...
+    mettreAJourResume();
 }
 
 // 3. Gestion de la photo
@@ -108,6 +106,16 @@ function ouvrirAppareilPhoto(id) {
             const imgTag = document.getElementById(`img-${id}`);
             imgTag.src = URL.createObjectURL(file);
             previewZone.classList.remove('hidden');
+
+            // SIMULATION IA : On estime les calories selon le repas
+            // Plus tard, l'IA analysera vraiment l'image ici
+            const estimation = 450; 
+            const item = maJournee.find(i => i.id === id);
+            if(item) {
+                item.calories = estimation;
+                localStorage.setItem('monPlan', JSON.stringify(maJournee));
+                mettreAJourResume();
+            }
         }
     };
     input.click();
