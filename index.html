@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Mon Suivi 4 Mois</title>
+    <title>Mon Suivi Pro</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
@@ -16,51 +16,48 @@
 <body class="pb-32">
 
     <div class="p-6 pt-12 pb-2 text-center">
-        <h1 id="date-titre" class="text-3xl font-black tracking-tight mb-4">Aujourd'hui</h1>
+        <h1 id="date-titre" class="text-3xl font-black tracking-tight mb-4 text-gray-900">Aujourd'hui</h1>
         <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-gray-100 flex justify-between items-center">
             <div><p class="text-[10px] font-bold text-gray-400 uppercase">Mangé</p><p id="val-mange" class="text-xl font-black text-orange-500">0</p></div>
             <div class="flex flex-col items-center">
                 <p id="val-reste" class="text-4xl font-black text-blue-600 leading-none">2250</p>
-                <p class="text-[10px] font-bold text-gray-400 uppercase mt-1">Reste Kcal</p>
+                <p class="text-[10px] font-bold text-gray-400 uppercase mt-1 text-blue-300">Reste Kcal</p>
             </div>
             <div><p class="text-[10px] font-bold text-gray-400 uppercase">Brûlé</p><p id="val-brule" class="text-xl font-black text-green-500">0</p></div>
         </div>
+        <button onclick="demanderNotification()" id="btn-notif" class="mt-4 text-[10px] font-bold text-blue-500 uppercase bg-blue-50 px-4 py-2 rounded-full shadow-sm">🔔 Configurer les Alertes</button>
     </div>
 
     <div id="date-selector" class="flex space-x-4 px-6 overflow-x-auto no-scrollbar mb-6 pb-2"></div>
 
     <div id="timeline" class="px-6 space-y-4"></div>
 
-    <button onclick="ouvrirModal()" class="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl text-3xl font-bold z-50">+</button>
+    <button onclick="ouvrirModal()" class="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl text-3xl font-bold z-50 active:scale-90 transition-transform">+</button>
 
     <div id="modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[60] flex items-end">
-        <div class="bg-white w-full rounded-t-[3rem] p-8 pb-12">
-            <h2 class="text-2xl font-black mb-6 italic">Nouvel élément</h2>
+        <div class="bg-white w-full rounded-t-[3rem] p-8 pb-12 animate-slide-up">
+            <h2 class="text-2xl font-black mb-6 text-gray-800">Planifier</h2>
             <div class="space-y-4">
-                <input type="text" id="titreAct" placeholder="Nom (ex: Maths, Muscu...)" class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold">
+                <input type="text" id="titreAct" placeholder="Nom de l'activité..." class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold text-lg">
                 <select id="typeAct" onchange="toggleChamps()" class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold">
                     <option value="cours">📚 Cours / RDV</option>
-                    <option value="repas">🍽️ Repas (Photo)</option>
                     <option value="sport">💪 Séance Sport</option>
+                    <option value="repas">🍽️ Repas</option>
                 </select>
                 
                 <div class="grid grid-cols-2 gap-2">
                     <div class="bg-gray-100 p-3 rounded-2xl">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase ml-1">Début</p>
-                        <input type="time" id="heureAct" class="w-full bg-transparent outline-none font-bold text-lg">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">Début</p>
+                        <input type="time" id="heureAct" class="w-full bg-transparent font-bold text-lg outline-none">
                     </div>
-                    <div id="bloc-fin" class="bg-gray-100 p-3 rounded-2xl">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase ml-1">Fin</p>
-                        <input type="time" id="heureFin" class="w-full bg-transparent outline-none font-bold text-lg">
+                    <div id="bloc-rappel" class="bg-blue-50 p-3 rounded-2xl border border-blue-100">
+                        <p class="text-[10px] font-bold text-blue-400 uppercase">⏰ Heure Rappel</p>
+                        <input type="time" id="heureRappel" class="w-full bg-transparent font-bold text-lg text-blue-600 outline-none">
                     </div>
                 </div>
 
-                <div id="bloc-cal" class="hidden">
-                    <input type="number" id="calAct" placeholder="Calories (optionnel)" class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold text-orange-500">
-                </div>
-
-                <button onclick="ajouter()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black text-lg shadow-lg">Valider</button>
-                <button onclick="fermerModal()" class="w-full text-gray-400 font-bold p-2">Fermer</button>
+                <button onclick="ajouter()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black text-lg shadow-lg">Ajouter au planning</button>
+                <button onclick="fermerModal()" class="w-full text-gray-400 font-bold p-2 text-sm">Annuler</button>
             </div>
         </div>
     </div>
@@ -70,24 +67,7 @@
     <script>
         const CAL_CIBLE = 2250;
         let dateSelectionnee = new Date().toISOString().split('T')[0];
-        let data = JSON.parse(localStorage.getItem('monAppV6')) || [];
-
-        function save() { 
-            localStorage.setItem('monAppV6', JSON.stringify(data)); 
-            render(); 
-        }
-
-        // Calcule la durée entre deux heures (HH:MM)
-        function calculerDuree(debut, fin) {
-            if (!debut || !fin) return null;
-            const [h1, m1] = debut.split(':').map(Number);
-            const [h2, m2] = fin.split(':').map(Number);
-            let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
-            if (diff < 0) diff += 1440; // Gestion minuit
-            const h = Math.floor(diff / 60);
-            const m = diff % 60;
-            return h > 0 ? `${h}h${m > 0 ? m : ''}` : `${m}min`;
-        }
+        let data = JSON.parse(localStorage.getItem('monAppV8')) || [];
 
         function render() {
             const timeline = document.getElementById('timeline');
@@ -112,8 +92,7 @@
                 const kcal = parseInt(i.c) || 0;
                 if(i.t === 'repas') m += kcal;
                 if(i.t === 'sport') b += kcal;
-                const duree = calculerDuree(i.h, i.hf);
-
+                
                 const card = document.createElement('div');
                 card.className = "bg-white/80 backdrop-blur rounded-[2.5rem] p-5 shadow-sm border border-white flex flex-col space-y-4 mb-4";
                 card.innerHTML = `
@@ -122,14 +101,12 @@
                             <div>
                                 <h3 class="font-black text-gray-800">${i.n}</h3>
                                 <p class="text-[10px] font-bold text-gray-400 uppercase">
-                                    ${i.h}${i.hf ? ' → '+i.hf : ''} 
-                                    ${duree ? ' • <span class="text-blue-600">'+duree+'</span>' : ''}
-                                    ${kcal > 0 ? ' • ' + kcal + ' KCAL' : ''}
+                                    ${i.h} ${i.hr ? ' • <span class="text-blue-500">🔔 '+i.hr+'</span>' : ''}
                                 </p>
                             </div>
                         </div>
                         <div class="flex space-x-2">
-                            ${i.t==='repas' ? `<button onclick="prendrePhoto(${i.id})" class="p-3 bg-orange-50 rounded-2xl shadow-inner">📸</button>` : ''}
+                            ${i.t==='repas' ? `<button onclick="prendrePhoto(${i.id})" class="p-3 bg-orange-50 rounded-2xl shadow-inner active:scale-95 transition-transform">📸</button>` : ''}
                             <button onclick="suppr(${i.id})" class="p-3 text-gray-200">✕</button>
                         </div>
                     </div>
@@ -141,53 +118,70 @@
             document.getElementById('val-mange').innerText = m;
             document.getElementById('val-brule').innerText = b;
             document.getElementById('val-reste').innerText = (CAL_CIBLE - m + b);
+            verifierNotifications();
         }
 
-        function toggleChamps() {
-            const type = document.getElementById('typeAct').value;
-            document.getElementById('bloc-fin').style.display = (type === 'repas') ? 'none' : 'block';
-            document.getElementById('bloc-cal').style.display = (type === 'cours') ? 'none' : 'block';
+        function demanderNotification() {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    document.getElementById('btn-notif').innerText = "Notifications Actives ✅";
+                }
+            });
         }
+
+        // Vérifie toutes les minutes si une notification doit partir
+        function verifierNotifications() {
+            const maintenant = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+            const aujourdhui = new Date().toISOString().split('T')[0];
+            
+            data.forEach(i => {
+                if (i.date === aujourdhui && i.hr === maintenant && !i.notifie) {
+                    new Notification("Rappel : " + i.n, { body: "Il est " + i.hr + ", c'est l'heure de ton activité !" });
+                    i.notifie = true; // Empêcher les répétitions
+                }
+            });
+        }
+
+        setInterval(verifierNotifications, 30000); // Check toutes les 30 sec
 
         function ajouter() {
             const n = document.getElementById('titreAct').value;
             const t = document.getElementById('typeAct').value;
             const h = document.getElementById('heureAct').value;
-            const hf = document.getElementById('heureFin').value;
-            let c = document.getElementById('calAct').value || (t === 'sport' ? 400 : 0);
-
+            const hr = document.getElementById('heureRappel').value;
             if(n && h) {
-                data.push({ id: Date.now(), date: dateSelectionnee, n, t, h, hf, c: parseInt(c), p: null });
-                save(); fermerModal();
+                data.push({ id: Date.now(), date: dateSelectionnee, n, t, h, hr, c: (t==='sport'?400:0), p: null, notifie: false });
+                localStorage.setItem('monAppV8', JSON.stringify(data));
+                render(); fermerModal();
+                document.getElementById('titreAct').value = '';
             }
         }
 
+        function toggleChamps() {
+            const type = document.getElementById('typeAct').value;
+            document.getElementById('bloc-rappel').style.display = (type === 'repas') ? 'none' : 'block';
+        }
+
+        function suppr(id) { data = data.filter(i => i.id !== id); localStorage.setItem('monAppV8', JSON.stringify(data)); render(); }
+        function ouvrirModal() { document.getElementById('modal').classList.remove('hidden'); toggleChamps(); }
+        function fermerModal() { document.getElementById('modal').classList.add('hidden'); }
+        
         function prendrePhoto(id) {
             const input = document.getElementById('photoInput');
             input.onchange = e => {
-                const file = e.target.files[0];
                 const reader = new FileReader();
                 reader.onload = ev => {
                     const item = data.find(i => i.id === id);
                     item.p = ev.target.result;
-                    const choix = prompt("CALORIES :\n1. Snack (200)\n2. Normal (600)\n3. Gros (900)\nOu chiffre :", "600");
-                    if(choix === "1") item.c = 200; else if(choix === "2") item.c = 600; else if(choix === "3") item.c = 900;
-                    else item.c = parseInt(choix) || 600;
-                    save();
+                    const c = prompt("Calories ?", "600");
+                    item.c = parseInt(c) || 600;
+                    localStorage.setItem('monAppV8', JSON.stringify(data));
+                    render();
                 };
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(e.target.files[0]);
             };
             input.click();
         }
-
-        function suppr(id) { data = data.filter(i => i.id !== id); save(); }
-        function ouvrirModal() { 
-            document.getElementById('modal').classList.remove('hidden');
-            const maintenant = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-            document.getElementById('heureAct').value = maintenant;
-            toggleChamps();
-        }
-        function fermerModal() { document.getElementById('modal').classList.add('hidden'); }
 
         render();
     </script>
