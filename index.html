@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Mon Suivi 4 Mois</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MonSuivi">
+<link rel="apple-touch-icon" href="https://via.placeholder.com/180/FF5733/FFFFFF?text=Fit">
+    
+    <style>
+        .ios-blur { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
+        body { background-color: #f2f2f7; font-family: -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <div class="p-6">
+        <h1 class="text-3xl font-extrabold tracking-tight">Aujourd'hui</h1>
+        <p class="text-gray-500 font-medium">Objectif : <span class="text-orange-500 text-lg">2200 kcal</span></p>
+    </div>
+
+    <div class="flex space-x-4 px-6 overflow-x-auto no-scrollbar mb-8">
+        <div class="flex-shrink-0 w-14 h-20 bg-blue-600 rounded-2xl flex flex-col items-center justify-center text-white shadow-lg">
+            <span class="text-[10px] uppercase font-bold">Jeu</span>
+            <span class="text-xl font-bold">1</span>
+        </div>
+        </div>
+
+    <div class="px-6 space-y-4" id="timeline">
+        
+        <div class="ios-blur rounded-3xl p-5 shadow-sm border border-white/50">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="font-bold text-gray-800 text-lg">Petit Déjeuner</h3>
+                    <p class="text-sm text-gray-400">En attente de photo...</p>
+                </div>
+                <input type="file" accept="image/*" capture="environment" id="photoInput" class="hidden">
+                <button onclick="document.getElementById('photoInput').click()" class="bg-blue-100 p-4 rounded-2xl active:scale-90 transition-transform">
+                    <span class="text-2xl">📸</span>
+                </button>
+            </div>
+            <div id="preview" class="w-full h-40 bg-gray-100 rounded-2xl hidden overflow-hidden">
+                <img id="imgPreview" src="" class="w-full h-full object-cover">
+            </div>
+        </div>
+
+    </div>
+
+    <nav class="fixed bottom-6 left-6 right-6 h-16 ios-blur rounded-full shadow-2xl flex justify-around items-center border border-white/20">
+        <button class="text-2xl">📅</button>
+        <button class="text-2xl opacity-30">📊</button>
+        <button class="text-2xl opacity-30">⚙️</button>
+    </nav>
+
+    <script>
+// 1. Nos données (on simulera une base de données ici)
+let maJournee = [
+    { id: 1, type: 'cours', titre: 'Mathématiques', heure: '09:00', icone: '📚', couleur: 'blue' },
+    { id: 2, type: 'repas', titre: 'Petit-Déjeuner', heure: '08:00', icone: '🥣', calories: 450 },
+    { id: 3, type: 'sport', titre: 'Séance Poussée (Pectoraux)', heure: '18:00', icone: '💪', calories: 500 }
+];
+
+// 2. Fonction pour afficher les éléments dans la timeline
+function chargerTimeline() {
+    const timeline = document.getElementById('timeline');
+    timeline.innerHTML = ''; // On vide pour rafraîchir
+
+    maJournee.forEach(item => {
+        const card = document.createElement('div');
+        card.className = "ios-blur rounded-3xl p-5 shadow-sm border border-white/50 mb-4";
+        
+        // Couleur dynamique selon le type
+        let borderCol = item.type === 'sport' ? 'border-l-4 border-green-500' : 
+                        item.type === 'repas' ? 'border-l-4 border-orange-500' : 
+                        'border-l-4 border-blue-500';
+
+        card.innerHTML = `
+            <div class="flex justify-between items-center ${borderCol} pl-4">
+                <div>
+                    <span class="text-xs font-bold uppercase text-gray-400">${item.heure}</span>
+                    <h3 class="font-bold text-gray-800 text-lg">${item.icone} ${item.titre}</h3>
+                    ${item.calories ? `<p class="text-sm font-medium text-gray-500">${item.calories} kcal</p>` : ''}
+                </div>
+                ${item.type === 'repas' ? `
+                    <button onclick="ouvrirAppareilPhoto(${item.id})" class="bg-orange-100 p-3 rounded-2xl active:scale-90 transition-transform">
+                        📸
+                    </button>
+                ` : ''}
+            </div>
+            <div id="preview-${item.id}" class="mt-4 w-full h-40 bg-gray-100 rounded-2xl hidden overflow-hidden">
+                <img id="img-${item.id}" src="" class="w-full h-full object-cover">
+            </div>
+        `;
+        timeline.appendChild(card);
+    });
+}
+
+// 3. Gestion de la photo
+function ouvrirAppareilPhoto(id) {
+    const input = document.getElementById('photoInput');
+    input.onchange = e => {
+        const [file] = e.target.files;
+        if (file) {
+            const previewZone = document.getElementById(`preview-${id}`);
+            const imgTag = document.getElementById(`img-${id}`);
+            imgTag.src = URL.createObjectURL(file);
+            previewZone.classList.remove('hidden');
+        }
+    };
+    input.click();
+}
+
+// Lancer au chargement
+chargerTimeline();
+    </script>
+</body>
+</html>
