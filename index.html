@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Mon Suivi 4 Mois</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+    <title>Mon Suivi IA</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://via.placeholder.com/180/FF5733/FFFFFF?text=Fit">
@@ -20,95 +22,79 @@
 <body class="pb-32">
 
     <div class="p-6 pt-12 pb-2">
-        <h1 id="date-titre" class="text-3xl font-extrabold tracking-tight capitalize">Aujourd'hui</h1>
-        
+        <h1 id="date-titre" class="text-3xl font-extrabold tracking-tight capitalize text-gray-900">Aujourd'hui</h1>
         <div class="mt-4 p-5 bg-white rounded-[2.5rem] shadow-sm border border-gray-100">
             <div class="flex justify-around items-center text-center">
-                <div>
-                    <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">Mangé</p>
-                    <p id="val-mange" class="text-xl font-black text-orange-500">0</p>
-                </div>
+                <div><p class="text-[10px] uppercase font-bold text-gray-400">Mangé</p><p id="val-mange" class="text-xl font-black text-orange-500">0</p></div>
                 <div class="h-10 w-[1px] bg-gray-100"></div>
-                <div>
-                    <p id="val-reste" class="text-3xl font-black text-blue-600">2250</p>
-                    <p class="text-[10px] uppercase font-bold text-gray-400">Reste Kcal</p>
-                </div>
+                <div><p id="val-reste" class="text-3xl font-black text-blue-600">2250</p><p class="text-[10px] uppercase font-bold text-gray-400">Reste Kcal</p></div>
                 <div class="h-10 w-[1px] bg-gray-100"></div>
-                <div>
-                    <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">Brûlé</p>
-                    <p id="val-brule" class="text-xl font-black text-green-500">0</p>
-                </div>
+                <div><p class="text-[10px] uppercase font-bold text-gray-400">Brûlé</p><p id="val-brule" class="text-xl font-black text-green-500">0</p></div>
             </div>
+            <div id="ai-status" class="mt-4 text-[10px] text-center text-blue-400 font-bold animate-pulse">Chargement de l'IA...</div>
         </div>
     </div>
 
     <div id="date-selector" class="flex space-x-4 px-6 overflow-x-auto no-scrollbar mb-6 pb-2"></div>
-
     <div class="px-6 space-y-4" id="timeline"></div>
 
-    <button onclick="ouvrirModal()" class="fixed bottom-28 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl text-3xl flex items-center justify-center active:scale-90 transition-transform z-50">+</button>
+    <button onclick="ouvrirModal()" class="fixed bottom-28 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl text-3xl flex items-center justify-center">+</button>
 
     <div id="modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-[60] flex items-end">
         <div class="bg-white w-full rounded-t-[3rem] p-8 animate-slide-up">
-            <h2 class="text-2xl font-bold mb-6">Ajouter</h2>
+            <h2 class="text-2xl font-bold mb-6 italic">Nouvelle entrée</h2>
             <div class="space-y-4">
-                <input type="text" id="titreAct" placeholder="Nom (ex: Muscu, Pizza...)" class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-medium">
+                <input type="text" id="titreAct" placeholder="Nom (ex: Muscu, Poulet...)" class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-medium">
                 <select id="typeAct" class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-medium">
-                    <option value="repas">🍽️ Repas / Snack</option>
-                    <option value="sport">💪 Sport / Séance</option>
+                    <option value="repas">🍽️ Repas (IA Photo)</option>
+                    <option value="sport">💪 Sport</option>
                     <option value="cours">📚 Cours / RDV</option>
                 </select>
                 <div class="flex space-x-2">
                     <input type="time" id="heureAct" class="flex-1 p-4 bg-gray-100 rounded-2xl outline-none font-medium">
-                    <input type="number" id="calAct" placeholder="kcal" class="w-28 p-4 bg-gray-100 rounded-2xl outline-none font-medium">
+                    <input type="number" id="calAct" placeholder="kcal (manuel)" class="w-28 p-4 bg-gray-100 rounded-2xl outline-none font-medium">
                 </div>
                 <button onclick="ajouterElement()" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg">Valider</button>
-                <button onclick="fermerModal()" class="w-full text-gray-400 p-2">Fermer</button>
+                <button onclick="fermerModal()" class="w-full text-gray-400 p-2 text-sm">Annuler</button>
             </div>
         </div>
     </div>
-
-    <nav class="fixed bottom-8 left-6 right-6 h-16 ios-blur rounded-full shadow-2xl flex justify-around items-center border border-white/20">
-        <button class="text-2xl">📅</button>
-        <button onclick="alert('Poids actuel: 126.8kg')" class="text-2xl opacity-30">📊</button>
-    </nav>
 
     <input type="file" accept="image/*" capture="environment" id="photoInput" class="hidden">
 
     <script>
         const CONFIG = { calorieBase: 2250 };
         let dateSelectionnee = new Date().toISOString().split('T')[0];
-        let data = JSON.parse(localStorage.getItem('monPlanV2')) || [];
+        let data = JSON.parse(localStorage.getItem('monPlanV3')) || [];
+        let net = null;
+
+        // Charger l'IA au démarrage
+        async function loadAI() {
+            net = await mobilenet.load();
+            document.getElementById('ai-status').innerText = "IA Prête 🟢";
+            setTimeout(() => document.getElementById('ai-status').classList.add('hidden'), 3000);
+        }
+        loadAI();
 
         function genererCalendrier() {
             const selector = document.getElementById('date-selector');
             selector.innerHTML = '';
             const aujourdhui = new Date();
-            for (let i = -2; i < 10; i++) {
-                const d = new Date();
-                d.setDate(aujourdhui.getDate() + i);
+            for (let i = -2; i < 7; i++) {
+                const d = new Date(); d.setDate(aujourdhui.getDate() + i);
                 const iso = d.toISOString().split('T')[0];
                 const active = iso === dateSelectionnee;
                 selector.innerHTML += `
                     <div onclick="changerDate('${iso}')" class="flex-shrink-0 w-14 h-20 rounded-2xl flex flex-col items-center justify-center transition-all ${active ? 'bg-blue-600 text-white shadow-lg scale-110' : 'bg-white text-gray-400 border border-gray-100'}">
-                        <span class="text-[10px] uppercase font-bold">${d.toLocaleDateString('fr-FR', {weekday:'short'})}</span>
+                        <span class="text-[10px] uppercase font-bold text-center">${d.toLocaleDateString('fr-FR', {weekday:'short'})}</span>
                         <span class="text-xl font-bold">${d.getDate()}</span>
                     </div>`;
             }
         }
 
-        function changerDate(iso) {
-            dateSelectionnee = iso;
-            const d = new Date(iso);
-            document.getElementById('date-titre').innerText = (iso === new Date().toISOString().split('T')[0]) ? "Aujourd'hui" : d.toLocaleDateString('fr-FR', {day:'numeric', month:'long'});
-            genererCalendrier();
-            chargerTimeline();
-        }
-
         function chargerTimeline() {
             const timeline = document.getElementById('timeline');
             timeline.innerHTML = '';
-            
             const duJour = data.filter(item => item.date === dateSelectionnee);
             duJour.sort((a,b) => a.heure.localeCompare(b.heure));
 
@@ -120,7 +106,7 @@
                 if(item.type === 'sport') brule += val;
 
                 const card = document.createElement('div');
-                card.className = "ios-blur rounded-3xl p-5 shadow-sm border border-white/50 mb-4";
+                card.className = "ios-blur rounded-[2rem] p-5 shadow-sm border border-white/50 mb-4";
                 let borderColor = item.type === 'sport' ? 'border-green-500' : (item.type === 'repas' ? 'border-orange-500' : 'border-blue-500');
                 
                 card.innerHTML = `
@@ -128,71 +114,71 @@
                         <div>
                             <p class="text-[10px] font-bold text-gray-400">${item.heure}</p>
                             <h3 class="font-bold text-gray-800">${item.icone} ${item.titre}</h3>
-                            ${item.type !== 'cours' ? `<p class="text-xs font-bold text-blue-500">${val} kcal</p>` : ''}
+                            <p class="text-xs font-bold ${item.type === 'sport' ? 'text-green-500':'text-orange-500'}">${val} kcal</p>
                         </div>
                         <div class="flex items-center space-x-3">
                             ${item.type === 'repas' ? `<button onclick="ouvrirPhoto(${item.id})" class="bg-orange-50 p-3 rounded-2xl">📸</button>` : ''}
                             <button onclick="supprimer(${item.id})" class="text-gray-200 text-xl">✕</button>
                         </div>
                     </div>
-                    ${item.photo ? `<img src="${item.photo}" class="mt-4 w-full h-44 object-cover rounded-2xl shadow-inner">` : ''}`;
+                    ${item.photo ? `<div class="mt-4"><img id="img-${item.id}" src="${item.photo}" class="w-full h-44 object-cover rounded-2xl shadow-inner"></div>` : ''}`;
                 timeline.appendChild(card);
             });
 
-            // MISE A JOUR CALCULATEUR
             document.getElementById('val-mange').innerText = mange;
             document.getElementById('val-brule').innerText = brule;
             document.getElementById('val-reste').innerText = (CONFIG.calorieBase - mange + brule);
-            
-            if (duJour.length === 0) timeline.innerHTML = '<p class="text-center text-gray-300 py-10">Journée vide</p>';
         }
 
-        function ouvrirModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('heureAct').value = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}); }
-        function fermerModal() { document.getElementById('modal').classList.add('hidden'); }
-
-        function ajouterElement() {
-            const titre = document.getElementById('titreAct').value;
-            const type = document.getElementById('typeAct').value;
-            const heure = document.getElementById('heureAct').value;
-            const kcal = document.getElementById('calAct').value || (type === 'sport' ? 400 : (type === 'repas' ? 500 : 0));
-
-            if(titre && heure) {
-                data.push({
-                    id: Date.now(),
-                    date: dateSelectionnee,
-                    type: type,
-                    titre: titre,
-                    heure: heure,
-                    icone: type === 'sport' ? '💪' : (type === 'repas' ? '🍽️' : '📚'),
-                    calories: parseInt(kcal)
-                });
-                sauver();
-                fermerModal();
-                document.getElementById('titreAct').value = '';
-                document.getElementById('calAct').value = '';
-            }
-        }
-
-        function supprimer(id) { data = data.filter(i => i.id !== id); sauver(); }
-
-        function ouvrirPhoto(id) {
+        async function ouvrirPhoto(id) {
             const input = document.getElementById('photoInput');
-            input.onchange = e => {
+            input.onchange = async e => {
                 const file = e.target.files[0];
                 const reader = new FileReader();
-                reader.onload = (event) => {
+                reader.onload = async (event) => {
                     const item = data.find(i => i.id === id);
                     item.photo = event.target.result;
-                    sauver();
+                    
+                    // IA Analyse
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = async () => {
+                        const predictions = await net.classify(img);
+                        // Logique simple : on détecte si c'est "healthy" ou "junk"
+                        const topResult = predictions[0].className.toLowerCase();
+                        let estCal = 450; // Valeur par défaut
+                        
+                        if(topResult.includes('pizza') || topResult.includes('burger')) estCal = 800;
+                        if(topResult.includes('salad') || topResult.includes('fruit')) estCal = 250;
+                        if(topResult.includes('meat') || topResult.includes('chicken')) estCal = 550;
+
+                        item.calories = estCal;
+                        item.titre = "IA : " + topResult.split(',')[0];
+                        sauver();
+                        alert("IA détecté : " + topResult + " (" + estCal + " kcal)");
+                    };
                 };
                 reader.readAsDataURL(file);
             };
             input.click();
         }
 
-        function sauver() {
-            localStorage.setItem('monPlanV2', JSON.stringify(data));
-            chargerTimeline();
+        function changerDate(iso) { dateSelectionnee = iso; chargerTimeline(); genererCalendrier(); }
+        function ouvrirModal() { document.getElementById('modal').classList.remove('hidden'); }
+        function fermerModal() { document.getElementById('modal').classList.add('hidden'); }
+        function sauver() { localStorage.setItem('monPlanV3', JSON.stringify(data)); chargerTimeline(); }
+        function supprimer(id) { data = data.filter(i => i.id !== id); sauver(); }
+
+        function ajouterElement() {
+            const titre = document.getElementById('titreAct').value;
+            const type = document.getElementById('typeAct').value;
+            const heure = document.getElementById('heureAct').value;
+            const kcal = document.getElementById('calAct').value || (type === 'sport' ? 400 : 0);
+
+            if(titre && heure) {
+                data.push({ id: Date.now(), date: dateSelectionnee, type, titre, heure, icone: type==='sport'?'💪':(type==='repas'?'🍽️':'📚'), calories: parseInt(kcal) });
+                sauver(); fermerModal();
+            }
         }
 
         genererCalendrier();
