@@ -1,0 +1,15 @@
+{
+  "name": "Mazfit",
+  "short_name": "Mazfit",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f2f2f7",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://i1.sndcdn.com/artworks-000148536086-y1uhes-t500x500.jpg",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
