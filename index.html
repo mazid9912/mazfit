@@ -51,16 +51,21 @@
         <div class="p-8 pt-16">
             <h1 class="text-3xl font-black mb-6">Semaine Type</h1>
             <div class="bg-white rounded-[2rem] p-6 shadow-sm space-y-4 mb-6">
-                <input type="text" id="prev-titre" placeholder="Activité" class="w-full p-4 bg-gray-100 rounded-xl font-bold border-none outline-none">
+                <input type="text" id="prev-titre" placeholder="Nom de l'activité ou cours" class="w-full p-4 bg-gray-100 rounded-xl font-bold border-none outline-none">
                 <div class="grid grid-cols-2 gap-2">
                     <input type="time" id="prev-heure" class="p-4 bg-gray-100 rounded-xl font-bold border-none outline-none">
                     <input type="number" id="prev-duree" placeholder="Durée (min)" class="p-4 bg-gray-100 rounded-xl font-bold border-none outline-none">
                 </div>
+                <select id="prev-type" class="w-full p-4 bg-gray-100 rounded-xl font-bold border-none outline-none">
+                    <option value="cours">📚 Cours</option>
+                    <option value="sport">💪 Sport</option>
+                    <option value="repas">🍽️ Repas</option>
+                </select>
                 <select id="prev-jour" class="w-full p-4 bg-gray-100 rounded-xl font-bold border-none outline-none">
                     <option value="1">Lundi</option><option value="2">Mardi</option><option value="3">Mercredi</option>
                     <option value="4">Jeudi</option><option value="5">Vendredi</option><option value="6">Samedi</option><option value="0">Dimanche</option>
                 </select>
-                <button onclick="ajouterPrev()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-black">Enregistrer</button>
+                <button onclick="ajouterPrev()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-black shadow-lg">Enregistrer l'habitude</button>
             </div>
             <div id="liste-prev" class="space-y-2"></div>
             <button onclick="appliquerSemaine()" class="w-full mt-6 border-2 border-blue-600 text-blue-600 p-5 rounded-3xl font-black">🚀 Remplir ma semaine</button>
@@ -83,7 +88,7 @@
 
     <div id="modal" class="fixed inset-0 bg-black/60 hidden z-[110] flex items-end">
         <div class="bg-white w-full rounded-t-[3rem] p-8 pb-12">
-            <h2 class="text-2xl font-black mb-6">Ajouter au Journal</h2>
+            <h2 class="text-2xl font-black mb-6 text-gray-800">Ajouter</h2>
             <div class="space-y-4">
                 <input type="text" id="titreAct" placeholder="Nom..." class="w-full p-4 bg-gray-100 rounded-2xl font-bold outline-none">
                 <div class="grid grid-cols-2 gap-2">
@@ -91,35 +96,103 @@
                     <input type="number" id="dureeAct" placeholder="Min" class="p-4 bg-gray-100 rounded-xl font-bold outline-none">
                 </div>
                 <select id="typeAct" class="w-full p-4 bg-gray-100 rounded-xl font-bold outline-none">
-                    <option value="repas">🍽️ Repas</option>
+                    <option value="cours">📚 Cours</option>
                     <option value="sport">💪 Sport</option>
+                    <option value="repas">🍽️ Repas</option>
                 </select>
-                <button onclick="ajouter()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black">Valider</button>
+                <button onclick="ajouter()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black shadow-lg">Valider</button>
                 <button onclick="fermerModal()" class="w-full text-gray-400 font-bold p-2">Fermer</button>
             </div>
         </div>
     </div>
 
     <script>
-        let data = JSON.parse(localStorage.getItem('monAppV16')) || [];
-        let prev = JSON.parse(localStorage.getItem('monPrevV16')) || [];
+        let data = JSON.parse(localStorage.getItem('monAppV17')) || [];
+        let prev = JSON.parse(localStorage.getItem('monPrevV17')) || [];
+        let alerts = JSON.parse(localStorage.getItem('monNotifsV17')) || [];
         let dateSelectionnee = new Date().toISOString().split('T')[0];
         let datePivot = new Date();
 
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 
-        function demanderNotification() {
-            Notification.requestPermission().then(p => { if(p==="granted") alert("Vibrations et Alertes OK !"); });
-        }
-
         function save() {
-            localStorage.setItem('monAppV16', JSON.stringify(data));
-            localStorage.setItem('monPrevV16', JSON.stringify(prev));
+            localStorage.setItem('monAppV17', JSON.stringify(data));
+            localStorage.setItem('monPrevV17', JSON.stringify(prev));
+            localStorage.setItem('monNotifsV17', JSON.stringify(alerts));
             render();
         }
 
-        function changerSemaine(jours) { datePivot.setDate(datePivot.getDate() + jours); renderCalendar(); }
+        function render() {
+            const tl = document.getElementById('timeline'); tl.innerHTML = '';
+            const duJour = data.filter(i => i.date === dateSelectionnee).sort((a,b) => a.h.localeCompare(b.h));
+            let m=0, b=0;
+            duJour.forEach(i => {
+                const c = parseInt(i.c) || 0; 
+                if(i.t==='repas') m+=c; 
+                if(i.t==='sport') b+=c;
+                
+                let borderColor = 'border-blue-500'; // Par défaut Repas
+                if(i.t === 'sport') borderColor = 'border-green-500';
+                if(i.t === 'cours') borderColor = 'border-purple-500';
 
+                tl.innerHTML += `<div class="bg-white p-5 rounded-[2rem] shadow-sm flex justify-between items-center border border-gray-50">
+                    <div class="border-l-4 ${borderColor} pl-4">
+                        <p class="font-black text-gray-800">${i.n}</p>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">${i.h} ${i.d? ' • '+i.d+'min' : ''} ${c>0 ? ' • '+c+' kcal' : ''}</p>
+                    </div>
+                    <button onclick="data=data.filter(x=>x.id!=${i.id});save();" class="text-gray-200 text-xl p-2">✕</button>
+                </div>`;
+            });
+            document.getElementById('val-mange').innerText = m;
+            document.getElementById('val-brule').innerText = b;
+            document.getElementById('val-reste').innerText = (2250 - m + b);
+        }
+
+        function ajouter() {
+            const n=document.getElementById('titreAct').value, t=document.getElementById('typeAct').value, h=document.getElementById('heureAct').value, d=document.getElementById('dureeAct').value;
+            if(n && h) {
+                let kcal = 0;
+                if(t==='sport') kcal = (prompt("Kcal brûlées ?", "400") || 400);
+                if(t==='repas') kcal = (prompt("Kcal mangées ?", "600") || 600);
+                data.push({id:Date.now(), date:dateSelectionnee, n, t, h, d, c:kcal});
+                save(); fermerModal();
+            }
+        }
+
+        function ajouterPrev() {
+            const t=document.getElementById('prev-titre').value, type=document.getElementById('prev-type').value, h=document.getElementById('prev-heure').value, j=document.getElementById('prev-jour').value, d=document.getElementById('prev-duree').value;
+            if(t && h) { prev.push({id:Date.now(), t, type, h, j, d}); save(); renderPrev(); }
+        }
+
+        function renderPrev() {
+            const l = document.getElementById('liste-prev'); l.innerHTML = '';
+            const jArr = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+            prev.forEach(p => {
+                let icon = p.type === 'cours' ? '📚' : (p.type === 'sport' ? '💪' : '🍽️');
+                l.innerHTML += `<div class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm">
+                    <div><p class="font-bold">${icon} ${p.t}</p><p class="text-xs text-blue-500 uppercase">${jArr[p.j]} à ${p.h} (${p.d}min)</p></div>
+                    <button onclick="prev=prev.filter(x=>x.id!=${p.id});save();renderPrev();">✕</button>
+                </div>`;
+            });
+        }
+
+        function appliquerSemaine() {
+            const debut = new Date();
+            for(let i=0; i<7; i++) {
+                let d = new Date(); d.setDate(debut.getDate()+i); let iso = d.toISOString().split('T')[0];
+                prev.forEach(p => {
+                    if(parseInt(p.j) === d.getDay()) {
+                        if(!data.find(e=>e.date===iso&&e.n===p.t)) {
+                            data.push({id:Date.now()+Math.random(), date:iso, n:p.t, t:p.type, h:p.h, d:p.d, c:(p.type==='sport'?400:0)});
+                        }
+                    }
+                });
+            }
+            save(); alert("Semaine synchronisée !"); switchPage('journal');
+        }
+
+        // NAVIGATION CALENDRIER
+        function changerSemaine(jours) { datePivot.setDate(datePivot.getDate() + jours); renderCalendar(); }
         function renderCalendar() {
             const sc = document.getElementById('date-selector'); sc.innerHTML = '';
             for(let i=-3; i<4; i++) {
@@ -132,73 +205,18 @@
             }
         }
 
-        function render() {
-            const tl = document.getElementById('timeline'); tl.innerHTML = '';
-            const duJour = data.filter(i => i.date === dateSelectionnee).sort((a,b) => a.h.localeCompare(b.h));
-            let m=0, b=0;
-            duJour.forEach(i => {
-                const c = parseInt(i.c) || 0; if(i.t==='repas') m+=c; if(i.t==='sport') b+=c;
-                tl.innerHTML += `<div class="bg-white p-5 rounded-[2rem] shadow-sm flex justify-between items-center border border-gray-50">
-                    <div class="border-l-4 ${i.t==='sport'?'border-green-500':'border-blue-500'} pl-4">
-                        <p class="font-black text-gray-800">${i.n}</p>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase">${i.h} ${i.d? ' • '+i.d+'min' : ''} • ${c} kcal</p>
-                    </div>
-                    <button onclick="data=data.filter(x=>x.id!=${i.id});save();" class="text-gray-200 text-xl">✕</button>
-                </div>`;
-            });
-            document.getElementById('val-mange').innerText = m;
-            document.getElementById('val-brule').innerText = b;
-            document.getElementById('val-reste').innerText = (2250 - m + b);
-        }
-
-        function ajouter() {
-            const n=document.getElementById('titreAct').value, t=document.getElementById('typeAct').value, h=document.getElementById('heureAct').value, d=document.getElementById('dureeAct').value;
-            if(n && h) {
-                let kcal = t==='sport' ? (prompt("Kcal brûlées ?", "400") || 400) : (prompt("Kcal mangées ?", "600") || 600);
-                data.push({id:Date.now(), date:dateSelectionnee, n, t, h, d, c:kcal});
-                save(); fermerModal();
-            }
-        }
-
-        function ajouterPrev() {
-            const t=document.getElementById('prev-titre').value, h=document.getElementById('prev-heure').value, j=document.getElementById('prev-jour').value, d=document.getElementById('prev-duree').value;
-            if(t && h) { prev.push({id:Date.now(), t, h, j, d}); save(); renderPrev(); }
-        }
-
-        function renderPrev() {
-            const l = document.getElementById('liste-prev'); l.innerHTML = '';
-            const jArr = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-            prev.forEach(p => {
-                l.innerHTML += `<div class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm">
-                    <div><p class="font-bold">${p.t}</p><p class="text-xs text-blue-500 uppercase">${jArr[p.j]} à ${p.h} (${p.d}min)</p></div>
-                    <button onclick="prev=prev.filter(x=>x.id!=${p.id});save();renderPrev();">✕</button>
-                </div>`;
-            });
-        }
-
-        function appliquerSemaine() {
-            const debut = new Date();
-            for(let i=0; i<7; i++) {
-                let d = new Date(); d.setDate(debut.getDate()+i); let iso = d.toISOString().split('T')[0];
-                prev.forEach(p => {
-                    if(parseInt(p.j) === d.getDay()) {
-                        if(!data.find(e=>e.date===iso&&e.n===p.t)) data.push({id:Date.now()+Math.random(), date:iso, n:p.t, t:'sport', h:p.h, d:p.d, c:400});
-                    }
-                });
-            }
-            save(); alert("Semaine remplie !"); switchPage('journal');
-        }
-
         function switchPage(p) {
             document.querySelectorAll('.page').forEach(pg => pg.classList.add('page-hidden'));
             document.getElementById('page-'+p).classList.remove('page-hidden');
             document.querySelectorAll('nav button').forEach(b => b.classList.add('opacity-40'));
-            document.getElementById('nav-'+p[0]).classList.remove('opacity-40');
+            const map = {journal:'j', prev:'p', notifs:'n'};
+            document.getElementById('nav-'+map[p]).classList.remove('opacity-40');
             if(p==='prev') renderPrev();
         }
 
         function ouvrirModal() { document.getElementById('modal').classList.remove('hidden'); }
         function fermerModal() { document.getElementById('modal').classList.add('hidden'); }
+        function demanderNotification() { Notification.requestPermission(); }
 
         renderCalendar();
         render();
