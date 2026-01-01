@@ -4,184 +4,198 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Mon Suivi Pro</title>
+    <title>Mon Suivi 4 Mois</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
-        .ios-blur { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
-        body { background-color: #f2f2f7; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .ios-blur { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        body { background-color: #f2f2f7; font-family: -apple-system, sans-serif; overflow: hidden; }
+        .page { position: absolute; inset: 0; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); background: #f2f2f7; overflow-y: auto; padding-bottom: 120px; }
+        .page-hidden { transform: translateX(100%); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="pb-32">
+<body>
 
-    <div class="p-6 pt-12 pb-2 text-center">
-        <h1 id="date-titre" class="text-3xl font-black tracking-tight mb-4 text-gray-900">Aujourd'hui</h1>
-        <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-gray-100 flex justify-between items-center">
-            <div><p class="text-[10px] font-bold text-gray-400 uppercase">Mangé</p><p id="val-mange" class="text-xl font-black text-orange-500">0</p></div>
-            <div class="flex flex-col items-center">
-                <p id="val-reste" class="text-4xl font-black text-blue-600 leading-none">2250</p>
-                <p class="text-[10px] font-bold text-gray-400 uppercase mt-1 text-blue-300">Reste Kcal</p>
-            </div>
-            <div><p class="text-[10px] font-bold text-gray-400 uppercase">Brûlé</p><p id="val-brule" class="text-xl font-black text-green-500">0</p></div>
-        </div>
-        <button onclick="demanderNotification()" id="btn-notif" class="mt-4 text-[10px] font-bold text-blue-500 uppercase bg-blue-50 px-4 py-2 rounded-full shadow-sm">🔔 Configurer les Alertes</button>
-    </div>
-
-    <div id="date-selector" class="flex space-x-4 px-6 overflow-x-auto no-scrollbar mb-6 pb-2"></div>
-
-    <div id="timeline" class="px-6 space-y-4"></div>
-
-    <button onclick="ouvrirModal()" class="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl text-3xl font-bold z-50 active:scale-90 transition-transform">+</button>
-
-    <div id="modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[60] flex items-end">
-        <div class="bg-white w-full rounded-t-[3rem] p-8 pb-12 animate-slide-up">
-            <h2 class="text-2xl font-black mb-6 text-gray-800">Planifier</h2>
-            <div class="space-y-4">
-                <input type="text" id="titreAct" placeholder="Nom de l'activité..." class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold text-lg">
-                <select id="typeAct" onchange="toggleChamps()" class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold">
-                    <option value="cours">📚 Cours / RDV</option>
-                    <option value="sport">💪 Séance Sport</option>
-                    <option value="repas">🍽️ Repas</option>
-                </select>
-                
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="bg-gray-100 p-3 rounded-2xl">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase">Début</p>
-                        <input type="time" id="heureAct" class="w-full bg-transparent font-bold text-lg outline-none">
-                    </div>
-                    <div id="bloc-rappel" class="bg-blue-50 p-3 rounded-2xl border border-blue-100">
-                        <p class="text-[10px] font-bold text-blue-400 uppercase">⏰ Heure Rappel</p>
-                        <input type="time" id="heureRappel" class="w-full bg-transparent font-bold text-lg text-blue-600 outline-none">
-                    </div>
+    <div id="page-journal" class="page">
+        <div class="p-6 pt-12 text-center">
+            <h1 id="date-titre" class="text-3xl font-black tracking-tight mb-4">Aujourd'hui</h1>
+            <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-gray-100 flex justify-between items-center">
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase">Mangé</p><p id="val-mange" class="text-xl font-black text-orange-500">0</p></div>
+                <div class="flex flex-col items-center">
+                    <p id="val-reste" class="text-4xl font-black text-blue-600 leading-none">2250</p>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mt-1">Reste Kcal</p>
                 </div>
-
-                <button onclick="ajouter()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black text-lg shadow-lg">Ajouter au planning</button>
-                <button onclick="fermerModal()" class="w-full text-gray-400 font-bold p-2 text-sm">Annuler</button>
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase">Brûlé</p><p id="val-brule" class="text-xl font-black text-green-500">0</p></div>
             </div>
+        </div>
+        <div id="date-selector" class="flex space-x-4 px-6 overflow-x-auto no-scrollbar mb-6"></div>
+        <div id="timeline" class="px-6 space-y-4"></div>
+    </div>
+
+    <div id="page-notifs" class="page page-hidden">
+        <div class="p-8 pt-16">
+            <h1 class="text-3xl font-black mb-2">Alertes</h1>
+            <p class="text-gray-400 text-sm mb-8 font-medium">Gérer mes rappels récurrents</p>
+
+            <button onclick="demanderPermission()" class="w-full bg-blue-50 text-blue-600 p-4 rounded-2xl font-bold mb-8 text-sm">🔔 Activer le système iOS</button>
+
+            <div class="bg-white rounded-[2rem] p-6 shadow-sm space-y-4">
+                <h2 class="font-bold text-gray-800">Nouveau rappel auto</h2>
+                <input type="text" id="notif-titre" placeholder="Titre (ex: Pesée, Vitamines...)" class="w-full p-4 bg-gray-100 rounded-xl outline-none font-bold">
+                <div class="flex space-x-2">
+                    <input type="time" id="notif-heure" class="flex-1 p-4 bg-gray-100 rounded-xl font-bold">
+                    <select id="notif-jour" class="flex-1 p-4 bg-gray-100 rounded-xl font-bold">
+                        <option value="tous">Chaque jour</option>
+                        <option value="1">Lundi</option><option value="2">Mardi</option><option value="3">Mercredi</option>
+                        <option value="4">Jeudi</option><option value="5">Vendredi</option><option value="6">Samedi</option><option value="0">Dimanche</option>
+                    </select>
+                </div>
+                <button onclick="ajouterNotifRecurrente()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-black shadow-lg">Enregistrer</button>
+            </div>
+
+            <div id="liste-notifs" class="mt-8 space-y-3">
+                </div>
         </div>
     </div>
 
-    <input type="file" accept="image/*" capture="environment" id="photoInput" class="hidden">
+    <nav class="fixed bottom-8 left-8 right-8 h-16 ios-blur rounded-full shadow-2xl flex justify-around items-center border border-white/20 z-[100]">
+        <button onclick="switchPage('journal')" id="nav-j" class="text-2xl opacity-100 transition-all">📅</button>
+        <button onclick="ouvrirModal()" class="w-12 h-12 bg-blue-600 text-white rounded-full text-2xl shadow-lg">+</button>
+        <button onclick="switchPage('notifs')" id="nav-n" class="text-2xl opacity-40 transition-all">🔔</button>
+    </nav>
+
+    <div id="modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[110] flex items-end">
+        <div class="bg-white w-full rounded-t-[3rem] p-8 pb-12">
+            <h2 class="text-2xl font-black mb-6">Ajouter</h2>
+            <div class="space-y-4">
+                <input type="text" id="titreAct" placeholder="Nom..." class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold text-lg">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="time" id="heureAct" class="p-4 bg-gray-100 rounded-xl font-bold text-center">
+                    <select id="typeAct" class="p-4 bg-gray-100 rounded-xl font-bold">
+                        <option value="cours">📚 Cours</option>
+                        <option value="sport">💪 Sport</option>
+                        <option value="repas">🍽️ Repas</option>
+                    </select>
+                </div>
+                <button onclick="ajouter()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black text-lg shadow-lg">Valider</button>
+                <button onclick="fermerModal()" class="w-full text-gray-400 font-bold p-2 text-sm">Fermer</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const CAL_CIBLE = 2250;
+        let data = JSON.parse(localStorage.getItem('monAppV9')) || [];
+        let notifs = JSON.parse(localStorage.getItem('mesNotifsV9')) || [];
         let dateSelectionnee = new Date().toISOString().split('T')[0];
-        let data = JSON.parse(localStorage.getItem('monAppV8')) || [];
 
-        function render() {
-            const timeline = document.getElementById('timeline');
-            const selector = document.getElementById('date-selector');
-            timeline.innerHTML = ''; selector.innerHTML = '';
-
-            for (let i = -2; i < 7; i++) {
-                const d = new Date(); d.setDate(new Date().getDate() + i);
-                const iso = d.toISOString().split('T')[0];
-                const active = iso === dateSelectionnee;
-                selector.innerHTML += `
-                    <div onclick="dateSelectionnee='${iso}'; render()" class="flex-shrink-0 w-14 h-20 rounded-2xl flex flex-col items-center justify-center ${active ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-400 border border-gray-100'}">
-                        <span class="text-[10px] font-bold uppercase">${d.toLocaleDateString('fr-FR', {weekday:'short'})}</span>
-                        <span class="text-xl font-black">${d.getDate()}</span>
-                    </div>`;
+        function switchPage(page) {
+            if(page === 'journal') {
+                document.getElementById('page-journal').classList.remove('page-hidden');
+                document.getElementById('page-notifs').classList.add('page-hidden');
+                document.getElementById('nav-j').classList.replace('opacity-40', 'opacity-100');
+                document.getElementById('nav-n').classList.replace('opacity-100', 'opacity-40');
+            } else {
+                document.getElementById('page-journal').classList.add('page-hidden');
+                document.getElementById('page-notifs').classList.remove('page-hidden');
+                document.getElementById('nav-j').classList.replace('opacity-100', 'opacity-40');
+                document.getElementById('nav-n').classList.replace('opacity-40', 'opacity-100');
+                renderNotifs();
             }
+        }
 
-            let m = 0; let b = 0;
-            const duJour = data.filter(i => i.date === dateSelectionnee).sort((a,b) => a.h.localeCompare(b.h));
-            
-            duJour.forEach(i => {
-                const kcal = parseInt(i.c) || 0;
-                if(i.t === 'repas') m += kcal;
-                if(i.t === 'sport') b += kcal;
-                
-                const card = document.createElement('div');
-                card.className = "bg-white/80 backdrop-blur rounded-[2.5rem] p-5 shadow-sm border border-white flex flex-col space-y-4 mb-4";
-                card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center space-x-3 border-l-4 ${i.t==='sport'?'border-green-500':(i.t==='repas'?'border-orange-500':'border-blue-500')} pl-3">
-                            <div>
-                                <h3 class="font-black text-gray-800">${i.n}</h3>
-                                <p class="text-[10px] font-bold text-gray-400 uppercase">
-                                    ${i.h} ${i.hr ? ' • <span class="text-blue-500">🔔 '+i.hr+'</span>' : ''}
-                                </p>
-                            </div>
+        function ajouterNotifRecurrente() {
+            const t = document.getElementById('notif-titre').value;
+            const h = document.getElementById('notif-heure').value;
+            const j = document.getElementById('notif-jour').value;
+            if(t && h) {
+                notifs.push({ id: Date.now(), t, h, j });
+                localStorage.setItem('mesNotifsV9', JSON.stringify(notifs));
+                renderNotifs();
+                alert("Rappel créé !");
+            }
+        }
+
+        function renderNotifs() {
+            const liste = document.getElementById('liste-notifs');
+            liste.innerHTML = '<h3 class="font-bold text-gray-400 text-xs uppercase mb-4">Mes Rappels Actifs</h3>';
+            const jours = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+            notifs.forEach(n => {
+                liste.innerHTML += `
+                    <div class="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm border border-gray-50">
+                        <div>
+                            <p class="font-black text-gray-800">${n.t}</p>
+                            <p class="text-[10px] font-bold text-blue-500 uppercase">${n.h} • ${n.j === 'tous' ? 'Chaque jour' : jours[n.j]}</p>
                         </div>
-                        <div class="flex space-x-2">
-                            ${i.t==='repas' ? `<button onclick="prendrePhoto(${i.id})" class="p-3 bg-orange-50 rounded-2xl shadow-inner active:scale-95 transition-transform">📸</button>` : ''}
-                            <button onclick="suppr(${i.id})" class="p-3 text-gray-200">✕</button>
-                        </div>
-                    </div>
-                    ${i.p ? `<img src="${i.p}" class="w-full h-48 object-cover rounded-[2rem] shadow-inner">` : ''}
-                `;
-                timeline.appendChild(card);
+                        <button onclick="supprNotif(${n.id})" class="text-gray-200">✕</button>
+                    </div>`;
             });
+        }
 
+        function supprNotif(id) { notifs = notifs.filter(n => n.id !== id); localStorage.setItem('mesNotifsV9', JSON.stringify(notifs)); renderNotifs(); }
+
+        function verifierNotifs() {
+            const maintenant = new Date();
+            const heureStr = maintenant.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+            const jourActuel = maintenant.getDay().toString();
+
+            notifs.forEach(n => {
+                if (n.h === heureStr && (n.j === 'tous' || n.j === jourActuel)) {
+                    // Pour éviter de spammer, on vérifie si on a déjà notifié cette minute
+                    if (window.derniereNotif !== heureStr + n.t) {
+                        new Notification("Rappel : " + n.t, { body: "Il est " + n.h });
+                        window.derniereNotif = heureStr + n.t;
+                    }
+                }
+            });
+        }
+
+        setInterval(verifierNotifs, 30000);
+
+        // Fonctions de base du journal (simplifiées)
+        function render() {
+            const tl = document.getElementById('timeline');
+            tl.innerHTML = '';
+            const duJour = data.filter(i => i.date === dateSelectionnee).sort((a,b) => a.h.localeCompare(b.h));
+            let m=0, b=0;
+            duJour.forEach(i => {
+                const c = parseInt(i.c) || 0; if(i.t==='repas') m+=c; if(i.t==='sport') b+=c;
+                tl.innerHTML += `<div class="bg-white p-5 rounded-[2rem] shadow-sm flex justify-between items-center">
+                    <div class="border-l-4 ${i.t==='sport'?'border-green-500':'border-blue-500'} pl-4">
+                        <p class="font-black text-gray-800">${i.n}</p>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">${i.h} ${c>0?' • '+c+' kcal':''}</p>
+                    </div>
+                    <button onclick="suppr(${i.id})" class="text-gray-200">✕</button>
+                </div>`;
+            });
             document.getElementById('val-mange').innerText = m;
             document.getElementById('val-brule').innerText = b;
-            document.getElementById('val-reste').innerText = (CAL_CIBLE - m + b);
-            verifierNotifications();
-        }
-
-        function demanderNotification() {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    document.getElementById('btn-notif').innerText = "Notifications Actives ✅";
-                }
-            });
-        }
-
-        // Vérifie toutes les minutes si une notification doit partir
-        function verifierNotifications() {
-            const maintenant = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-            const aujourdhui = new Date().toISOString().split('T')[0];
+            document.getElementById('val-reste').innerText = (2250 - m + b);
             
-            data.forEach(i => {
-                if (i.date === aujourdhui && i.hr === maintenant && !i.notifie) {
-                    new Notification("Rappel : " + i.n, { body: "Il est " + i.hr + ", c'est l'heure de ton activité !" });
-                    i.notifie = true; // Empêcher les répétitions
-                }
-            });
-        }
-
-        setInterval(verifierNotifications, 30000); // Check toutes les 30 sec
-
-        function ajouter() {
-            const n = document.getElementById('titreAct').value;
-            const t = document.getElementById('typeAct').value;
-            const h = document.getElementById('heureAct').value;
-            const hr = document.getElementById('heureRappel').value;
-            if(n && h) {
-                data.push({ id: Date.now(), date: dateSelectionnee, n, t, h, hr, c: (t==='sport'?400:0), p: null, notifie: false });
-                localStorage.setItem('monAppV8', JSON.stringify(data));
-                render(); fermerModal();
-                document.getElementById('titreAct').value = '';
+            // Générateur de calendrier simplifié
+            const sc = document.getElementById('date-selector'); sc.innerHTML = '';
+            for(let i=-2; i<5; i++) {
+                let d = new Date(); d.setDate(d.getDate()+i);
+                let iso = d.toISOString().split('T')[0];
+                sc.innerHTML += `<div onclick="dateSelectionnee='${iso}'; render()" class="flex-shrink-0 w-12 h-16 rounded-xl flex flex-col items-center justify-center ${iso===dateSelectionnee?'bg-blue-600 text-white':'bg-white text-gray-400'}">
+                    <span class="text-[9px] font-bold uppercase">${d.toLocaleDateString('fr-FR',{weekday:'short'})}</span>
+                    <span class="text-lg font-black">${d.getDate()}</span>
+                </div>`;
             }
         }
 
-        function toggleChamps() {
-            const type = document.getElementById('typeAct').value;
-            document.getElementById('bloc-rappel').style.display = (type === 'repas') ? 'none' : 'block';
+        function ajouter() {
+            const n=document.getElementById('titreAct').value, t=document.getElementById('typeAct').value, h=document.getElementById('heureAct').value;
+            if(n && h) {
+                data.push({id:Date.now(), date:dateSelectionnee, n, t, h, c:(t==='sport'?400:0)});
+                localStorage.setItem('monAppV9', JSON.stringify(data));
+                render(); fermerModal();
+            }
         }
-
-        function suppr(id) { data = data.filter(i => i.id !== id); localStorage.setItem('monAppV8', JSON.stringify(data)); render(); }
-        function ouvrirModal() { document.getElementById('modal').classList.remove('hidden'); toggleChamps(); }
+        function suppr(id) { data = data.filter(i=>i.id!==id); localStorage.setItem('monAppV9', JSON.stringify(data)); render(); }
+        function ouvrirModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('heureAct').value = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
         function fermerModal() { document.getElementById('modal').classList.add('hidden'); }
-        
-        function prendrePhoto(id) {
-            const input = document.getElementById('photoInput');
-            input.onchange = e => {
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    const item = data.find(i => i.id === id);
-                    item.p = ev.target.result;
-                    const c = prompt("Calories ?", "600");
-                    item.c = parseInt(c) || 600;
-                    localStorage.setItem('monAppV8', JSON.stringify(data));
-                    render();
-                };
-                reader.readAsDataURL(e.target.files[0]);
-            };
-            input.click();
-        }
+        function demanderPermission() { Notification.requestPermission(); }
 
         render();
     </script>
