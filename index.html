@@ -38,8 +38,8 @@
                 <div><p class="text-[10px] font-bold text-gray-400 uppercase">Brûlé</p><p id="val-brule" class="text-xl font-black text-green-500">0</p></div>
             </div>
             
-            <button onclick="demanderNotification()" id="btn-notif" class="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-6 py-2 rounded-full mb-6">
-                🔔 Activer les Notifications
+            <button onclick="demanderNotification()" id="btn-notif" class="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-6 py-2 rounded-full mb-6 active:scale-95 transition-all">
+                🔔 Activer les Alertes iPhone
             </button>
         </div>
 
@@ -54,27 +54,27 @@
     <div id="page-prev" class="page page-hidden">
         <div class="p-8 pt-16">
             <h1 class="text-3xl font-black mb-6">Semaine Type</h1>
-            <div class="bg-white rounded-[2rem] p-6 shadow-sm space-y-4 mb-6 text-sm">
-                <input type="text" id="prev-titre" placeholder="Nom de l'activité" class="w-full p-4 bg-gray-100 rounded-xl font-bold outline-none border-none">
+            <div class="bg-white rounded-[2rem] p-6 shadow-sm space-y-4 mb-6">
+                <input type="text" id="prev-titre" placeholder="Nom de l'activité" class="w-full p-4 bg-gray-100 rounded-xl font-bold outline-none">
                 <div class="flex space-x-2">
-                    <input type="time" id="prev-heure" class="flex-1 p-4 bg-gray-100 rounded-xl font-bold border-none">
-                    <select id="prev-jour" class="flex-1 p-4 bg-gray-100 rounded-xl font-bold border-none">
+                    <input type="time" id="prev-heure" class="flex-1 p-4 bg-gray-100 rounded-xl font-bold">
+                    <select id="prev-jour" class="flex-1 p-4 bg-gray-100 rounded-xl font-bold">
                         <option value="1">Lundi</option><option value="2">Mardi</option><option value="3">Mercredi</option>
                         <option value="4">Jeudi</option><option value="5">Vendredi</option><option value="6">Samedi</option><option value="0">Dimanche</option>
                     </select>
                 </div>
-                <button onclick="ajouterPrev()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-black shadow-lg">Enregistrer l'habitude</button>
+                <button onclick="ajouterPrev()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-black">Enregistrer</button>
             </div>
             <div id="liste-prev" class="space-y-3 mb-6"></div>
-            <button onclick="appliquerSemaine()" class="w-full border-2 border-blue-600 text-blue-600 p-5 rounded-3xl font-black">🚀 Remplir ma semaine</button>
+            <button onclick="appliquerSemaine()" class="w-full border-2 border-blue-600 text-blue-600 p-5 rounded-3xl font-black">🚀 Appliquer à la semaine</button>
         </div>
     </div>
 
     <div id="page-notifs" class="page page-hidden">
         <div class="p-8 pt-16">
-            <h1 class="text-3xl font-black mb-8">Mes Alertes</h1>
+            <h1 class="text-3xl font-black mb-8 text-gray-900">Notifications</h1>
             <div class="bg-white rounded-[2rem] p-6 shadow-sm space-y-4 mb-6">
-                <input type="text" id="notif-titre" placeholder="Titre..." class="w-full p-4 bg-gray-100 rounded-xl font-bold">
+                <input type="text" id="notif-titre" placeholder="Titre (ex: Boire eau)..." class="w-full p-4 bg-gray-100 rounded-xl font-bold outline-none">
                 <div class="flex space-x-2">
                     <input type="time" id="notif-heure" class="flex-1 p-4 bg-gray-100 rounded-xl font-bold">
                     <select id="notif-jour" class="flex-1 p-4 bg-gray-100 rounded-xl font-bold">
@@ -92,18 +92,18 @@
     <nav class="fixed bottom-8 left-8 right-8 h-16 ios-blur rounded-full shadow-2xl flex justify-around items-center border border-white/20 z-[100]">
         <button onclick="switchPage('journal')" id="nav-j" class="text-2xl opacity-100">📅</button>
         <button onclick="switchPage('prev')" id="nav-p" class="text-2xl opacity-40">📝</button>
-        <button onclick="ouvrirModal()" class="w-12 h-12 bg-blue-600 text-white rounded-full text-2xl shadow-lg">+</button>
+        <button onclick="ouvrirModal()" class="w-12 h-12 bg-blue-600 text-white rounded-full text-2xl shadow-lg active:scale-90">+</button>
         <button onclick="switchPage('notifs')" id="nav-n" class="text-2xl opacity-40">🔔</button>
     </nav>
 
     <div id="modal" class="fixed inset-0 bg-black/60 hidden z-[110] flex items-end">
         <div class="bg-white w-full rounded-t-[3rem] p-8 pb-12">
-            <h2 class="text-2xl font-black mb-6">Ajouter</h2>
+            <h2 class="text-2xl font-black mb-6 text-gray-800">Ajouter</h2>
             <div class="space-y-4">
-                <input type="text" id="titreAct" placeholder="Nom..." class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold">
+                <input type="text" id="titreAct" placeholder="Titre..." class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold">
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="time" id="heureAct" class="p-4 bg-gray-100 rounded-xl font-bold">
-                    <select id="typeAct" class="p-4 bg-gray-100 rounded-xl font-bold">
+                    <input type="time" id="heureAct" class="p-4 bg-gray-100 rounded-xl font-bold outline-none">
+                    <select id="typeAct" class="p-4 bg-gray-100 rounded-xl font-bold outline-none">
                         <option value="repas">🍽️ Repas</option>
                         <option value="sport">💪 Sport</option>
                         <option value="cours">📚 Cours</option>
@@ -115,12 +115,32 @@
         </div>
     </div>
 
+    <input type="file" id="photoInput" class="hidden">
+
     <script>
         let data = JSON.parse(localStorage.getItem('monAppV15')) || [];
         let prev = JSON.parse(localStorage.getItem('monPrevV15')) || [];
         let alerts = JSON.parse(localStorage.getItem('monNotifsV15')) || [];
         let dateSelectionnee = new Date().toISOString().split('T')[0];
         let datePivot = new Date();
+
+        // ENREGISTREMENT SERVICE WORKER
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => console.log("Worker prêt."));
+        }
+
+        function demanderNotification() {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    document.getElementById('btn-notif').innerText = "Alertes Activées ✅";
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.ready.then(reg => {
+                            reg.showNotification("Mon Suivi Pro", { body: "Les notifications sont prêtes !" });
+                        });
+                    }
+                }
+            });
+        }
 
         function save() { 
             localStorage.setItem('monAppV15', JSON.stringify(data)); 
@@ -129,10 +149,7 @@
             render(); 
         }
 
-        function demanderNotification() {
-            Notification.requestPermission().then(p => { if(p==="granted") alert("Activé !"); });
-        }
-
+        // CALENDRIER INFINI
         function changerSemaine(jours) { datePivot.setDate(datePivot.getDate() + jours); renderCalendar(); }
 
         function renderCalendar() {
@@ -140,7 +157,7 @@
             for(let i=-3; i<4; i++) {
                 let d = new Date(datePivot); d.setDate(d.getDate() + i);
                 let iso = d.toISOString().split('T')[0];
-                sc.innerHTML += `<div onclick="dateSelectionnee='${iso}'; renderCalendar(); render()" class="flex-shrink-0 w-12 h-16 rounded-2xl flex flex-col items-center justify-center transition-all ${iso===dateSelectionnee ? 'active-date' : 'bg-white text-gray-400 shadow-sm'}">
+                sc.innerHTML += `<div onclick="dateSelectionnee='${iso}'; renderCalendar(); render()" class="flex-shrink-0 w-12 h-16 rounded-2xl flex flex-col items-center justify-center transition-all ${iso===dateSelectionnee ? 'active-date' : 'bg-white text-gray-400'}">
                     <span class="text-[9px] font-bold uppercase">${d.toLocaleDateString('fr-FR',{weekday:'short'})}</span>
                     <span class="text-lg font-black">${d.getDate()}</span>
                 </div>`;
@@ -190,7 +207,7 @@
         function renderPrev() {
             const l = document.getElementById('liste-prev'); l.innerHTML = '';
             const jArr = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-            prev.forEach(p => { l.innerHTML += `<div class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm"><div><p class="font-bold">${p.t}</p><p class="text-xs text-blue-500 uppercase">${jArr[p.j]} à ${p.h}</p></div><button onclick="prev=prev.filter(x=>x.id!=${p.id});save();renderPrev();">✕</button></div>`; });
+            prev.forEach(p => { l.innerHTML += `<div class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm mb-2"><div><p class="font-bold">${p.t}</p><p class="text-xs text-blue-500 uppercase">${jArr[p.j]} à ${p.h}</p></div><button onclick="prev=prev.filter(x=>x.id!=${p.id});save();renderPrev();">✕</button></div>`; });
         }
 
         function appliquerSemaine() {
@@ -206,12 +223,24 @@
         function renderNotifs() {
             const l = document.getElementById('liste-notifs'); l.innerHTML = '';
             const jArr = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-            alerts.forEach(n => { l.innerHTML += `<div class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm"><div><p class="font-bold text-gray-800">${n.t}</p><p class="text-xs text-orange-500 uppercase">${n.h} • ${n.j==='tous'?'Chaque jour':jArr[n.j]}</p></div><button onclick="alerts=alerts.filter(x=>x.id!=${n.id});save();renderNotifs();">✕</button></div>`; });
+            alerts.forEach(n => { l.innerHTML += `<div class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm mb-2"><div><p class="font-bold text-gray-800">${n.t}</p><p class="text-xs text-orange-500 uppercase">${n.h} • ${n.j==='tous'?'Chaque jour':jArr[n.j]}</p></div><button onclick="alerts=alerts.filter(x=>x.id!=${n.id});save();renderNotifs();">✕</button></div>`; });
         }
 
         setInterval(() => {
-            const h = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-            alerts.forEach(n => { if(n.h === h && window.lNotif !== h+n.t) { new Notification(n.t); window.lNotif = h+n.t; } });
+            if (Notification.permission === "granted") {
+                const h = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+                const j = new Date().getDay().toString();
+                alerts.forEach(n => {
+                    if(n.h === h && (n.j === 'tous' || n.j === j)) {
+                        if(window.lNotif !== h+n.t) {
+                            navigator.serviceWorker.ready.then(reg => {
+                                reg.showNotification(n.t, { body: "C'est l'heure de ton rappel !" });
+                            });
+                            window.lNotif = h+n.t;
+                        }
+                    }
+                });
+            }
         }, 30000);
 
         function ouvrirModal() { document.getElementById('modal').classList.remove('hidden'); }
