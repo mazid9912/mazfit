@@ -6,123 +6,169 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Mon Suivi 4 Mois</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="MonSuivi">
-<link rel="apple-touch-icon" href="https://via.placeholder.com/180/FF5733/FFFFFF?text=Fit">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MonSuivi">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/180/FF5733/FFFFFF?text=Fit">
     
     <style>
         .ios-blur { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
-        body { background-color: #f2f2f7; font-family: -apple-system, sans-serif; }
+        body { background-color: #f2f2f7; font-family: -apple-system, sans-serif; overflow-x: hidden; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-up { animation: slideUp 0.3s ease-out; }
     </style>
 </head>
-<body class="pb-24">
+<body class="pb-32">
 
-    <div class="p-6">
+    <div class="p-6 pt-12">
         <h1 class="text-3xl font-extrabold tracking-tight">Aujourd'hui</h1>
-        <p class="text-gray-500 font-medium">Objectif : <span class="text-orange-500 text-lg">2200 kcal</span></p>
+        <p id="resume-cal" class="text-gray-500 font-medium mt-1">Chargement des données...</p>
     </div>
-
-    <div class="flex space-x-4 px-6 overflow-x-auto no-scrollbar mb-8">
-        <div class="flex-shrink-0 w-14 h-20 bg-blue-600 rounded-2xl flex flex-col items-center justify-center text-white shadow-lg">
-            <span class="text-[10px] uppercase font-bold">Jeu</span>
-            <span class="text-xl font-bold">1</span>
-        </div>
-        </div>
 
     <div class="px-6 space-y-4" id="timeline">
-        
-        <div class="ios-blur rounded-3xl p-5 shadow-sm border border-white/50">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h3 class="font-bold text-gray-800 text-lg">Petit Déjeuner</h3>
-                    <p class="text-sm text-gray-400">En attente de photo...</p>
-                </div>
-                <input type="file" accept="image/*" capture="environment" id="photoInput" class="hidden">
-                <button onclick="document.getElementById('photoInput').click()" class="bg-blue-100 p-4 rounded-2xl active:scale-90 transition-transform">
-                    <span class="text-2xl">📸</span>
-                </button>
-            </div>
-            <div id="preview" class="w-full h-40 bg-gray-100 rounded-2xl hidden overflow-hidden">
-                <img id="imgPreview" src="" class="w-full h-full object-cover">
-            </div>
         </div>
 
+    <button onclick="ouvrirModal()" class="fixed bottom-28 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl text-3xl flex items-center justify-center active:scale-90 transition-transform z-50">
+        +
+    </button>
+
+    <div id="modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-[60] flex items-end">
+        <div class="bg-white w-full rounded-t-[3rem] p-8 animate-slide-up">
+            <h2 class="text-2xl font-bold mb-6">Nouvelle activité</h2>
+            <div class="space-y-4">
+                <input type="text" id="titreAct" placeholder="Nom (ex: Muscu, Pâtes...)" class="w-full p-4 bg-gray-100 rounded-2xl outline-none">
+                <select id="typeAct" class="w-full p-4 bg-gray-100 rounded-2xl outline-none">
+                    <option value="cours">📚 Cours / RDV</option>
+                    <option value="sport">💪 Sport (Muscu/Cardio)</option>
+                    <option value="repas">🍽️ Repas / Snack</option>
+                </select>
+                <input type="time" id="heureAct" class="w-full p-4 bg-gray-100 rounded-2xl outline-none">
+                <button onclick="ajouterElement()" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg shadow-lg">Ajouter au calendrier</button>
+                <button onclick="fermerModal()" class="w-full text-gray-400 font-medium p-2">Annuler</button>
+            </div>
+        </div>
     </div>
 
-    <nav class="fixed bottom-6 left-6 right-6 h-16 ios-blur rounded-full shadow-2xl flex justify-around items-center border border-white/20">
+    <nav class="fixed bottom-8 left-6 right-6 h-16 ios-blur rounded-full shadow-2xl flex justify-around items-center border border-white/20 z-40">
         <button class="text-2xl">📅</button>
         <button class="text-2xl opacity-30">📊</button>
         <button class="text-2xl opacity-30">⚙️</button>
     </nav>
 
+    <input type="file" accept="image/*" capture="environment" id="photoInput" class="hidden">
+
     <script>
-// 1. Tes données physiques réelles (issues de ta balance)
-const donneesPhysiques = {
-    poidsActuel: 126.8,
-    metabolismeBase: 2136,
-    objectifCalories: 2250, // Déficit léger pour perdre gras sans perdre muscle
-    proteinesCible: 190 // Environ 1.5g par kilo de poids
-};
+        const donneesPhysiques = {
+            poidsActuel: 126.8,
+            metabolismeBase: 2136,
+            objectifCalories: 2250
+        };
 
-// 2. Ta base de données locale (chargée depuis le téléphone ou vide)
-let maJournee = JSON.parse(localStorage.getItem('monPlan')) || [
-    { id: 1, type: 'repas', titre: 'Petit-Déjeuner', heure: '08:00', icone: '🥣', calories: 500 },
-    { id: 2, type: 'cours', titre: 'Cours du matin', heure: '09:00', icone: '📚' }
-];
+        // Charger les données sauvegardées ou utiliser une liste par défaut
+        let maJournee = JSON.parse(localStorage.getItem('monPlan')) || [
+            { id: 1, type: 'repas', titre: 'Petit Déjeuner', heure: '08:00', icone: '🥣', calories: 0 },
+            { id: 2, type: 'sport', titre: 'Séance Muscu', heure: '18:00', icone: '💪', calories: 400 }
+        ];
 
-// 3. Fonction pour mettre à jour l'affichage des calories en haut
-function mettreAJourResume() {
-    const totalMange = maJournee
-        .filter(i => i.type === 'repas')
-        .reduce((sum, i) => sum + (i.calories || 0), 0);
-    
-    const totalBrule = maJournee
-        .filter(i => i.type === 'sport')
-        .reduce((sum, i) => sum + (i.calories || 0), 0);
+        function mettreAJourResume() {
+            const totalMange = maJournee.filter(i => i.type === 'repas').reduce((sum, i) => sum + (i.calories || 0), 0);
+            const totalBrule = maJournee.filter(i => i.type === 'sport').reduce((sum, i) => sum + (i.calories || 0), 0);
+            const reste = donneesPhysiques.objectifCalories - totalMange + totalBrule;
+            
+            document.getElementById('resume-cal').innerHTML = `
+                Mangé: <span class="text-orange-500 font-bold">${totalMange}</span> | 
+                Brûlé: <span class="text-green-500 font-bold">${totalBrule}</span><br>
+                Reste: <span class="text-blue-600 font-bold text-xl">${Math.round(reste)} kcal</span>
+            `;
+        }
 
-    const reste = donneesPhysiques.objectifCalories - totalMange + totalBrule;
-    
-    // On met à jour le texte dans le Header (si tu as mis les bons ID)
-    document.querySelector('p.text-gray-500').innerHTML = `
-        Mangé: <span class="text-orange-500 font-bold">${totalMange}</span> | 
-        Brûlé: <span class="text-green-500 font-bold">${totalBrule}</span><br>
-        Reste: <span class="text-blue-600 font-bold text-xl">${Math.round(reste)} kcal</span>
-    `;
-}
+        function chargerTimeline() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+            
+            // Tri par heure
+            maJournee.sort((a, b) => a.heure.localeCompare(b.heure));
 
-// Appelle cette fonction à la fin de chargerTimeline()
-function chargerTimeline() {
-    // ... (garde ton code précédent ici) ...
-    mettreAJourResume();
-}
+            maJournee.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "ios-blur rounded-3xl p-5 shadow-sm border border-white/50 mb-4";
+                
+                let colorClass = item.type === 'sport' ? 'border-green-500' : (item.type === 'repas' ? 'border-orange-500' : 'border-blue-500');
 
-// 3. Gestion de la photo
-function ouvrirAppareilPhoto(id) {
-    const input = document.getElementById('photoInput');
-    input.onchange = e => {
-        const [file] = e.target.files;
-        if (file) {
-            const previewZone = document.getElementById(`preview-${id}`);
-            const imgTag = document.getElementById(`img-${id}`);
-            imgTag.src = URL.createObjectURL(file);
-            previewZone.classList.remove('hidden');
+                card.innerHTML = `
+                    <div class="flex justify-between items-center border-l-4 ${colorClass} pl-4">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-gray-400">${item.heure}</span>
+                            <h3 class="font-bold text-gray-800 text-lg">${item.icone} ${item.titre}</h3>
+                            ${item.type !== 'cours' ? `<p class="text-sm font-medium text-gray-500">${item.calories || 0} kcal</p>` : ''}
+                        </div>
+                        ${item.type === 'repas' ? `
+                            <button onclick="ouvrirAppareilPhoto(${item.id})" class="bg-orange-100 p-3 rounded-2xl active:scale-95 transition-transform">📸</button>
+                        ` : ''}
+                        <button onclick="supprimerItem(${item.id})" class="text-gray-300 hover:text-red-400 ml-2">✕</button>
+                    </div>
+                    <div id="preview-${item.id}" class="mt-4 w-full h-40 bg-gray-100 rounded-2xl ${item.photo ? '' : 'hidden'} overflow-hidden">
+                        <img src="${item.photo || ''}" class="w-full h-full object-cover">
+                    </div>
+                `;
+                timeline.appendChild(card);
+            });
+            mettreAJourResume();
+        }
 
-            // SIMULATION IA : On estime les calories selon le repas
-            // Plus tard, l'IA analysera vraiment l'image ici
-            const estimation = 450; 
-            const item = maJournee.find(i => i.id === id);
-            if(item) {
-                item.calories = estimation;
-                localStorage.setItem('monPlan', JSON.stringify(maJournee));
-                mettreAJourResume();
+        function ouvrirModal() { document.getElementById('modal').classList.remove('hidden'); }
+        function fermerModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        function ajouterElement() {
+            const titre = document.getElementById('titreAct').value;
+            const type = document.getElementById('typeAct').value;
+            const heure = document.getElementById('heureAct').value;
+
+            if(titre && heure) {
+                const nouvelItem = {
+                    id: Date.now(),
+                    type: type,
+                    titre: titre,
+                    heure: heure,
+                    icone: type === 'sport' ? '💪' : (type === 'repas' ? '🍽️' : '📚'),
+                    calories: type === 'sport' ? 400 : 0
+                };
+                maJournee.push(nouvelItem);
+                sauvegarderEtRelancer();
+                fermerModal();
+                document.getElementById('titreAct').value = '';
             }
         }
-    };
-    input.click();
-}
 
-// Lancer au chargement
-chargerTimeline();
+        function supprimerItem(id) {
+            maJournee = maJournee.filter(i => i.id !== id);
+            sauvegarderEtRelancer();
+        }
+
+        function ouvrirAppareilPhoto(id) {
+            const input = document.getElementById('photoInput');
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const item = maJournee.find(i => i.id === id);
+                        item.photo = event.target.result;
+                        item.calories = 450; // Simulation estimation IA
+                        sauvegarderEtRelancer();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        function sauvegarderEtRelancer() {
+            localStorage.setItem('monPlan', JSON.stringify(maJournee));
+            chargerTimeline();
+        }
+
+        chargerTimeline();
     </script>
 </body>
 </html>
